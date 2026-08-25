@@ -29,7 +29,7 @@
 <body>
 <div id="root"></div>
 
-<script type="text/babel" data-presets='[["react",{"runtime":"classic"}]]'>
+<script type="text/plain" id="app-source">
 const { useState, useEffect, useMemo, useRef } = React;
 
 // ---------- Design tokens ----------
@@ -870,6 +870,13 @@ function ImportModal({ accounts, customRules, onClose, onImport }) {
 }
 
 ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+<script>
+  var code = document.getElementById("app-source").textContent;
+  var output = Babel.transform(code, { presets: [["react", { runtime: "classic" }]] }).code;
+  var script = document.createElement("script");
+  script.text = output;
+  document.body.appendChild(script);
 </script>
 </body>
 </html>
