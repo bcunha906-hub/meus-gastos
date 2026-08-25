@@ -2,404 +2,874 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
-<title>Meus Gastos</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Meus Gastos — Livro-caixa pessoal</title>
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%231f2e28'/%3E%3Ctext x='50' y='68' font-size='56' text-anchor='middle' fill='%23f6f2e8'%3E%24%3C/text%3E%3C/svg%3E" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Meus Gastos" />
+<meta name="theme-color" content="#f6f2e8" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --bg:#0b0e14; --surface:#141924; --surface2:#1b2231; --border:#242c3d;
-    --text:#e7ebf3; --muted:#8792a6; --green:#37d6a0; --red:#ff6961; --gold:#f2b84b;
+  body { font-family: 'Inter', sans-serif; }
+  .font-serif { font-family: 'Fraunces', serif; }
+  .font-mono { font-family: 'IBM Plex Mono', monospace; }
+  @media print {
+    .no-print { display: none !important; }
+    header, nav { display: none !important; }
+    body, html { background: #fff !important; }
   }
-  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
-  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
-  body{padding-bottom:110px;}
-  .wrap{max-width:480px;margin:0 auto;position:relative;min-height:100vh;}
-  .header{display:flex;align-items:center;gap:8px;padding:22px 20px 4px;}
-  .logo{width:30px;height:30px;border-radius:50%;background:var(--green);
-    display:flex;align-items:center;justify-content:center;font-size:15px;}
-  .brand{font-size:13px;letter-spacing:.04em;color:var(--muted);font-weight:600;}
-  .monthnav{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;}
-  .monthnav button{background:none;border:none;color:var(--muted);font-size:20px;
-    width:36px;height:36px;border-radius:50%;}
-  .monthnav button:active{background:var(--surface2);}
-  .monthnav .label{font-size:17px;font-weight:700;text-transform:capitalize;}
-  .card{margin:14px 20px;padding:20px;border-radius:22px;background:var(--surface);
-    border:1px solid var(--border);}
-  .card .eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:4px;}
-  .saldo{font-size:34px;font-weight:800;font-variant-numeric:tabular-nums;}
-  .row2{display:flex;gap:12px;margin-top:16px;}
-  .pill{flex:1;background:var(--surface2);border-radius:16px;padding:10px 12px;}
-  .pill .lbl{font-size:12px;font-weight:600;display:flex;align-items:center;gap:5px;margin-bottom:2px;}
-  .pill .val{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;}
-  .income{color:var(--green);} .expense{color:var(--red);}
-  .section{margin:20px 20px 0;}
-  .eyebrow-lg{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:10px;}
-  .catrow{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
-  .caticon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-    font-size:14px;flex-shrink:0;}
-  .catbar-wrap{flex:1;min-width:0;}
-  .catbar-top{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;}
-  .catbar-top .name{color:#c7cedb;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .catbar-top .amt{color:var(--muted);font-variant-numeric:tabular-nums;margin-left:8px;flex-shrink:0;}
-  .catbar-track{height:6px;border-radius:3px;background:var(--surface2);overflow:hidden;}
-  .catbar-fill{height:100%;border-radius:3px;}
-  .daylabel{font-size:12px;color:var(--muted);margin:0 0 6px;text-transform:capitalize;}
-  .txlist{border-radius:18px;background:var(--surface);border:1px solid var(--border);overflow:hidden;margin-bottom:16px;}
-  .tx{display:flex;align-items:center;gap:11px;padding:11px 13px;border-bottom:1px solid var(--border);}
-  .tx:last-child{border-bottom:none;}
-  .tx .icon{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
-  .tx .info{flex:1;min-width:0;}
-  .tx .title{font-size:14px;color:#dde3ee;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .tx .note{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .tx .amt{font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;flex-shrink:0;}
-  .tx .del{background:none;border:none;color:#6b7385;padding:6px;flex-shrink:0;font-size:15px;}
-  .empty{border:1.5px dashed var(--border);border-radius:18px;padding:36px 20px;text-align:center;color:var(--muted);}
-  .empty .big{font-size:26px;margin-bottom:8px;}
-  .empty p{margin:2px 0;font-size:13px;}
-  .fabs{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:center;
-    background:linear-gradient(to top, var(--bg) 55%, transparent);padding:26px 0 20px;pointer-events:none;}
-  .fabs-inner{width:100%;max-width:480px;padding:0 20px;display:flex;justify-content:flex-end;gap:10px;}
-  .fab-income{pointer-events:auto;height:48px;padding:0 16px;border-radius:24px;background:var(--surface2);
-    border:1px solid var(--border);color:var(--green);font-weight:600;font-size:14px;
-    display:flex;align-items:center;gap:6px;}
-  .fab-add{pointer-events:auto;height:48px;width:48px;border-radius:50%;background:var(--green);
-    border:none;color:#0b0e14;font-size:26px;font-weight:700;box-shadow:0 6px 18px rgba(55,214,160,.35);}
-  .fab-income:active,.fab-add:active{transform:scale(.95);}
-  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:50;display:none;}
-  .modal-overlay.open{display:block;}
-  .modal{position:fixed;left:0;right:0;bottom:0;z-index:51;max-width:480px;margin:0 auto;
-    background:var(--surface);border-top:1px solid var(--border);border-radius:24px 24px 0 0;
-    padding:14px 20px 32px;max-height:88vh;overflow-y:auto;display:none;}
-  .modal.open{display:block;}
-  .grip{width:38px;height:4px;border-radius:2px;background:#333c4d;margin:0 auto 16px;}
-  .modal-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
-  .toggle{display:flex;background:var(--surface2);border-radius:20px;padding:4px;}
-  .toggle button{border:none;background:none;padding:8px 16px;border-radius:16px;font-size:14px;font-weight:600;color:var(--muted);}
-  .toggle button.active.exp{background:var(--red);color:#0b0e14;}
-  .toggle button.active.inc{background:var(--green);color:#0b0e14;}
-  .closebtn{background:none;border:none;color:var(--muted);font-size:20px;padding:6px;}
-  .amountwrap{display:flex;align-items:center;justify-content:center;gap:4px;padding:20px 0;}
-  .amountwrap .cur{font-size:22px;color:var(--muted);}
-  .amountwrap input{background:none;border:none;outline:none;color:var(--text);font-size:38px;
-    font-weight:800;width:180px;text-align:center;font-variant-numeric:tabular-nums;}
-  .catgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
-  .catbtn{display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 4px;
-    border-radius:16px;border:1px solid transparent;background:rgba(255,255,255,.03);}
-  .catbtn.active{background:var(--surface2);border-color:#3a4358;}
-  .catbtn .ci{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;}
-  .catbtn span{font-size:10px;color:#a7afc0;text-align:center;line-height:1.2;}
-  .fieldsrow{display:flex;gap:10px;margin-bottom:16px;}
-  .fieldsrow input{background:var(--surface2);border:1px solid var(--border);border-radius:14px;
-    padding:12px;font-size:14px;color:var(--text);outline:none;}
-  .fieldsrow input[type=date]{flex:1;color-scheme:dark;}
-  .fieldsrow input[type=text]{flex:1.5;}
-  .savebtn{width:100%;height:50px;border-radius:16px;border:none;background:var(--green);
-    color:#0b0e14;font-size:16px;font-weight:700;}
-  .savebtn:disabled{opacity:.3;}
-  .savebtn:active:not(:disabled){transform:scale(.98);}
-  .saveerr{margin:6px 20px 0;font-size:12px;color:var(--red);}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="header">
-    <div class="logo">💰</div>
-    <div class="brand">MEUS GASTOS</div>
-  </div>
+<div id="root"></div>
 
-  <div class="monthnav">
-    <button id="prevMonth">‹</button>
-    <span class="label" id="monthLabel">—</span>
-    <button id="nextMonth">›</button>
-  </div>
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useMemo, useRef } = React;
 
-  <div class="card">
-    <div class="eyebrow">Saldo do mês</div>
-    <div class="saldo" id="saldoVal">R$ 0,00</div>
-    <div class="row2">
-      <div class="pill">
-        <div class="lbl income">↗ Receitas</div>
-        <div class="val" id="incomeVal">R$ 0,00</div>
-      </div>
-      <div class="pill">
-        <div class="lbl expense">↘ Despesas</div>
-        <div class="val" id="expenseVal">R$ 0,00</div>
-      </div>
-    </div>
-  </div>
+// ---------- Design tokens ----------
+const INK = "#1f2e28";
+const PAPER = "#f6f2e8";
+const PAPER_LINE = "#e3dcc8";
+const LEDGER_GREEN = "#2f6d5c";
+const LEDGER_RED = "#a13d2f";
+const LEDGER_GOLD = "#b1893f";
+const CARD = "#fffdf7";
 
-  <div class="section" id="catSection" style="display:none;">
-    <div class="eyebrow-lg">Por categoria</div>
-    <div id="catList"></div>
-  </div>
+// ---------- Ícones (SVG simples, sem dependência externa) ----------
+const Icon = ({ path, size = 16, color = "currentColor", strokeWidth = 2 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+    {path}
+  </svg>
+);
+const IPlus = (p) => <Icon {...p} path={<><path d="M12 5v14M5 12h14"/></>} />;
+const ITrash = (p) => <Icon {...p} path={<><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6h12Z"/></>} />;
+const IPencil = (p) => <Icon {...p} path={<><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z"/></>} />;
+const IX = (p) => <Icon {...p} path={<><path d="M18 6 6 18M6 6l12 12"/></>} />;
+const ITrendUp = (p) => <Icon {...p} path={<><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></>} />;
+const ITrendDown = (p) => <Icon {...p} path={<><path d="M23 18l-9.5-9.5-5 5L1 6"/><path d="M17 18h6v-6"/></>} />;
+const IPiggy = (p) => <Icon {...p} path={<><path d="M19 5c-1.5-1.5-3.5-2-5.5-2C9 3 5 6.5 5 11c0 1.8.6 3.4 1.6 4.7L5 19h3l1.3-1.3c1 .3 2.1.5 3.2.5h1v2h3v-2.3c1.7-.7 3-2 3.6-3.7H21v-3h-1.2C19.5 9 19.3 6.7 19 5Z"/><circle cx="15" cy="9" r=".5"/></>} />;
+const ILandmark = (p) => <Icon {...p} path={<><path d="M3 22h18M3 10h18M5 6l7-4 7 4M4 10v12M20 10v12M8 10v8M16 10v8"/></>} />;
+const ISparkle = (p) => <Icon {...p} path={<><path d="M12 3l1.5 5.5L19 10l-5.5 1.5L12 17l-1.5-5.5L5 10l5.5-1.5L12 3Z"/></>} />;
+const IFiles = (p) => <Icon {...p} path={<><path d="M4 4h9l4 4v12H4Z"/><path d="M13 4v4h4"/><path d="M8 12h8M8 16h8"/></>} />;
+const IInfo = (p) => <Icon {...p} path={<><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></>} />;
+const IRepeat = (p) => <Icon {...p} path={<><path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></>} />;
+const IPrinter = (p) => <Icon {...p} path={<><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6Z"/></>} />;
+const IWallet = (p) => <Icon {...p} path={<><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></>} />;
 
-  <div class="section">
-    <div class="eyebrow-lg">Lançamentos</div>
-    <div id="txContainer"></div>
-  </div>
+const TYPE_META = {
+  receita: { label: "Receita", color: LEDGER_GREEN, Icon: ITrendUp, sign: 1 },
+  despesa: { label: "Despesa", color: LEDGER_RED, Icon: ITrendDown, sign: -1 },
+  investimento: { label: "Investimento", color: LEDGER_GOLD, Icon: IPiggy, sign: -1 },
+};
 
-  <div class="saveerr" id="saveErr" style="display:none;">Não foi possível salvar agora. Tente novamente.</div>
-</div>
+const DEFAULT_CATEGORIES = {
+  receita: ["Salário", "Honorários", "Rendimentos", "Reembolso", "Outros"],
+  despesa: ["Moradia","Alimentação","Transporte","Saúde","Lazer","Casamento","Estudos","Compras","Assinaturas","Outros"],
+  investimento: ["Renda fixa", "Renda variável", "Previdência", "Reserva", "Outros"],
+};
 
-<div class="fabs">
-  <div class="fabs-inner">
-    <button class="fab-income" id="openIncome">↗ Receita</button>
-    <button class="fab-add" id="openExpense">+</button>
-  </div>
-</div>
+const ACCOUNT_TYPES = ["Conta corrente", "Poupança", "Cartão de crédito", "Investimento", "Dinheiro"];
 
-<div class="modal-overlay" id="overlay"></div>
-<div class="modal" id="modal">
-  <div class="grip"></div>
-  <div class="modal-top">
-    <div class="toggle">
-      <button id="typeExpense" class="exp">Despesa</button>
-      <button id="typeIncome" class="inc">Receita</button>
-    </div>
-    <button class="closebtn" id="closeModal">✕</button>
-  </div>
-  <div class="amountwrap">
-    <span class="cur">R$</span>
-    <input id="amountInput" type="text" inputmode="decimal" placeholder="0,00" />
-  </div>
-  <div class="catgrid" id="catGrid"></div>
-  <div class="fieldsrow">
-    <input id="dateInput" type="date" />
-    <input id="noteInput" type="text" placeholder="Nota (opcional)" />
-  </div>
-  <button class="savebtn" id="saveBtn" disabled>Salvar</button>
-</div>
+const STORAGE_KEY = "meus-gastos:estado";
+const RULES_KEY = "meus-gastos:regras-classificacao";
 
-<script>
-const CATEGORIES = [
-  {id:"alimentacao", label:"Alimentação", icon:"🍽️", color:"#F2B84B"},
-  {id:"transporte", label:"Transporte", icon:"🚗", color:"#5AA9E6"},
-  {id:"moradia", label:"Moradia", icon:"🏠", color:"#37D6A0"},
-  {id:"saude", label:"Saúde", icon:"❤️", color:"#FF6961"},
-  {id:"lazer", label:"Lazer", icon:"🎮", color:"#C792EA"},
-  {id:"compras", label:"Compras", icon:"🛍️", color:"#F2994A"},
-  {id:"educacao", label:"Educação", icon:"🎓", color:"#56CCF2"},
-  {id:"outros", label:"Outros", icon:"⋯", color:"#9AA5B1"},
+const uid = () => Math.random().toString(36).slice(2, 10);
+const currency = (v) => (v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const monthLabel = (ym) => {
+  const [y, m] = ym.split("-");
+  const d = new Date(Number(y), Number(m) - 1, 1);
+  const s = d.toLocaleDateString("pt-BR", { month: "short", year: "2-digit" }).replace(".", "");
+  return s.charAt(0).toUpperCase() + s.slice(1);
+};
+const semesterLabel = (ym) => {
+  const [y, m] = ym.split("-").map(Number);
+  return `${m <= 6 ? "1º" : "2º"} sem/${String(y).slice(2)}`;
+};
+
+const DEFAULT_RULES = [
+  { kw: "ifood", type: "despesa", category: "Alimentação" },
+  { kw: "rappi", type: "despesa", category: "Alimentação" },
+  { kw: "supermercado", type: "despesa", category: "Alimentação" },
+  { kw: "mercado", type: "despesa", category: "Alimentação" },
+  { kw: "padaria", type: "despesa", category: "Alimentação" },
+  { kw: "restaurante", type: "despesa", category: "Alimentação" },
+  { kw: "acougue", type: "despesa", category: "Alimentação" },
+  { kw: "lanchonete", type: "despesa", category: "Alimentação" },
+  { kw: "pizzaria", type: "despesa", category: "Alimentação" },
+  { kw: "hortifruti", type: "despesa", category: "Alimentação" },
+  { kw: "uber", type: "despesa", category: "Transporte" },
+  { kw: "99app", type: "despesa", category: "Transporte" },
+  { kw: "posto", type: "despesa", category: "Transporte" },
+  { kw: "combustivel", type: "despesa", category: "Transporte" },
+  { kw: "estacionamento", type: "despesa", category: "Transporte" },
+  { kw: "sem parar", type: "despesa", category: "Transporte" },
+  { kw: "pedagio", type: "despesa", category: "Transporte" },
+  { kw: "latam", type: "despesa", category: "Transporte" },
+  { kw: "gol linhas", type: "despesa", category: "Transporte" },
+  { kw: "farmacia", type: "despesa", category: "Saúde" },
+  { kw: "drogaria", type: "despesa", category: "Saúde" },
+  { kw: "unimed", type: "despesa", category: "Saúde" },
+  { kw: "hospital", type: "despesa", category: "Saúde" },
+  { kw: "clinica", type: "despesa", category: "Saúde" },
+  { kw: "laboratorio", type: "despesa", category: "Saúde" },
+  { kw: "academia", type: "despesa", category: "Saúde" },
+  { kw: "smartfit", type: "despesa", category: "Saúde" },
+  { kw: "odonto", type: "despesa", category: "Saúde" },
+  { kw: "aluguel", type: "despesa", category: "Moradia" },
+  { kw: "condominio", type: "despesa", category: "Moradia" },
+  { kw: "saneago", type: "despesa", category: "Moradia" },
+  { kw: "celg", type: "despesa", category: "Moradia" },
+  { kw: "enel", type: "despesa", category: "Moradia" },
+  { kw: "equatorial", type: "despesa", category: "Moradia" },
+  { kw: "energia", type: "despesa", category: "Moradia" },
+  { kw: "iptu", type: "despesa", category: "Moradia" },
+  { kw: "netflix", type: "despesa", category: "Assinaturas" },
+  { kw: "spotify", type: "despesa", category: "Assinaturas" },
+  { kw: "amazon prime", type: "despesa", category: "Assinaturas" },
+  { kw: "hbo", type: "despesa", category: "Assinaturas" },
+  { kw: "disney", type: "despesa", category: "Assinaturas" },
+  { kw: "youtube premium", type: "despesa", category: "Assinaturas" },
+  { kw: "internet", type: "despesa", category: "Moradia" },
+  { kw: "vivo", type: "despesa", category: "Moradia" },
+  { kw: "claro", type: "despesa", category: "Moradia" },
+  { kw: "tim ", type: "despesa", category: "Moradia" },
+  { kw: "cinema", type: "despesa", category: "Lazer" },
+  { kw: "ingresso", type: "despesa", category: "Lazer" },
+  { kw: "booking", type: "despesa", category: "Lazer" },
+  { kw: "airbnb", type: "despesa", category: "Lazer" },
+  { kw: "hotel", type: "despesa", category: "Lazer" },
+  { kw: "bar ", type: "despesa", category: "Lazer" },
+  { kw: "faculdade", type: "despesa", category: "Estudos" },
+  { kw: "mensalidade", type: "despesa", category: "Estudos" },
+  { kw: "pos-graduacao", type: "despesa", category: "Estudos" },
+  { kw: "livraria", type: "despesa", category: "Estudos" },
+  { kw: "curso", type: "despesa", category: "Estudos" },
+  { kw: "buffet", type: "despesa", category: "Casamento" },
+  { kw: "cerimonial", type: "despesa", category: "Casamento" },
+  { kw: "noiv", type: "despesa", category: "Casamento" },
+  { kw: "fotografia", type: "despesa", category: "Casamento" },
+  { kw: "decoracao", type: "despesa", category: "Casamento" },
+  { kw: "amazon", type: "despesa", category: "Compras" },
+  { kw: "mercado livre", type: "despesa", category: "Compras" },
+  { kw: "shopee", type: "despesa", category: "Compras" },
+  { kw: "shein", type: "despesa", category: "Compras" },
+  { kw: "magazine luiza", type: "despesa", category: "Compras" },
+  { kw: "renner", type: "despesa", category: "Compras" },
+  { kw: "salario", type: "receita", category: "Salário" },
+  { kw: "pix recebido", type: "receita", category: "Rendimentos" },
+  { kw: "ted recebid", type: "receita", category: "Rendimentos" },
+  { kw: "honorari", type: "receita", category: "Honorários" },
+  { kw: "reembolso", type: "receita", category: "Reembolso" },
+  { kw: "rendimento", type: "receita", category: "Rendimentos" },
+  { kw: "dividendo", type: "receita", category: "Rendimentos" },
+  { kw: "aplicacao", type: "investimento", category: "Renda fixa" },
+  { kw: "cdb", type: "investimento", category: "Renda fixa" },
+  { kw: "tesouro direto", type: "investimento", category: "Renda fixa" },
+  { kw: "acoes", type: "investimento", category: "Renda variável" },
+  { kw: "fundo de investimento", type: "investimento", category: "Renda fixa" },
+  { kw: "previdencia", type: "investimento", category: "Previdência" },
 ];
-const catById = id => CATEGORIES.find(c => c.id === id) || CATEGORIES[CATEGORIES.length-1];
-const monthNames = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-const weekdayShort = ["dom","seg","ter","qua","qui","sex","sáb"];
 
-function fmt(n){
-  return n.toLocaleString("pt-BR", {style:"currency", currency:"BRL"});
-}
-function todayISO(){
-  const d = new Date();
-  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-  return d.toISOString().slice(0,10);
-}
-function formatDayLabel(iso){
-  const [y,m,d] = iso.split("-").map(Number);
-  const date = new Date(y, m-1, d);
-  const today = new Date();
-  const isToday = date.getFullYear()===today.getFullYear() && date.getMonth()===today.getMonth() && date.getDate()===today.getDate();
-  if (isToday) return "Hoje";
-  const yest = new Date(today); yest.setDate(yest.getDate()-1);
-  if (date.getFullYear()===yest.getFullYear() && date.getMonth()===yest.getMonth() && date.getDate()===yest.getDate()) return "Ontem";
-  return weekdayShort[date.getDay()] + ", " + d + " de " + monthNames[m-1].slice(0,3).toLowerCase();
-}
+const normalize = (s) => (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-let transactions = [];
-let cursor = (() => { const n = new Date(); return {y:n.getFullYear(), m:n.getMonth()}; })();
-let modalType = "expense";
-let modalCategory = "alimentacao";
-
-let storageAvailable = true;
-
-function loadData(){
-  try{
-    const raw = localStorage.getItem("gastos_transactions");
-    if (raw) transactions = JSON.parse(raw);
-  }catch(e){
-    storageAvailable = false;
+function classify(description, customRules) {
+  const norm = normalize(description);
+  if (!norm) return null;
+  const all = [...customRules, ...DEFAULT_RULES];
+  for (const r of all) {
+    if (norm.includes(normalize(r.kw))) return { type: r.type, category: r.category };
   }
-  render();
+  return null;
 }
 
-function saveData(){
-  try{
-    localStorage.setItem("gastos_transactions", JSON.stringify(transactions));
-    document.getElementById("saveErr").style.display = "none";
-  }catch(e){
-    storageAvailable = false;
-    document.getElementById("saveErr").style.display = "block";
-  }
-}
-
-function monthTx(){
-  return transactions.filter(t => {
-    const [y,m] = t.date.split("-").map(Number);
-    return y === cursor.y && (m-1) === cursor.m;
+function detectRecurring(entries) {
+  const groups = {};
+  entries.filter((e) => e.type === "despesa" && e.description).forEach((e) => {
+    const norm = normalize(e.description);
+    const key = norm.split(" ").slice(0, 2).join(" ");
+    if (!key) return;
+    if (!groups[key]) groups[key] = { key, label: e.description, category: e.category, items: [] };
+    groups[key].items.push(e);
   });
+  const result = [];
+  Object.values(groups).forEach((g) => {
+    const months = new Set(g.items.map((i) => i.date.slice(0, 7)));
+    if (months.size < 2) return;
+    const values = g.items.map((i) => i.value);
+    const min = Math.min(...values), max = Math.max(...values);
+    if (min > 0 && max / min > 1.6) return;
+    const avg = values.reduce((s, v) => s + v, 0) / values.length;
+    const last = g.items.slice().sort((a, b) => b.date.localeCompare(a.date))[0];
+    result.push({ key: g.key, label: last.description || g.label, category: g.items[0].category, months: [...months].sort(), avgValue: avg, count: g.items.length });
+  });
+  return result.sort((a, b) => b.avgValue * b.months.length - a.avgValue * a.months.length);
 }
 
-function render(){
-  document.getElementById("monthLabel").textContent = monthNames[cursor.m] + " " + cursor.y;
-  const tx = monthTx();
-  const income = tx.filter(t=>t.type==="income").reduce((s,t)=>s+t.amount,0);
-  const expense = tx.filter(t=>t.type==="expense").reduce((s,t)=>s+t.amount,0);
-  const saldo = income - expense;
+function parseStatementText(text) {
+  const lines = text.trim().split(/\r?\n/).filter(Boolean);
+  if (lines.length === 0) return [];
+  const firstLineIsHeader = /data|valor|desc|hist/i.test(lines[0]);
+  const delim = lines[0].includes(";") ? ";" : lines[0].includes("\t") ? "\t" : ",";
+  if (firstLineIsHeader && lines[0].split(delim).length >= 2) {
+    const header = lines[0].split(delim).map((h) => h.trim().toLowerCase());
+    const dateIdx = header.findIndex((h) => h.includes("data"));
+    const descIdx = header.findIndex((h) => h.includes("desc") || h.includes("hist") || h.includes("estabelec"));
+    const valueIdx = header.findIndex((h) => h.includes("valor") || h.includes("value"));
+    if (dateIdx !== -1 && valueIdx !== -1) {
+      return lines.slice(1).map((line) => {
+        const cols = line.split(delim);
+        return rowFromParts(cols[dateIdx], descIdx !== -1 ? cols[descIdx] : "", cols[valueIdx]);
+      }).filter(Boolean);
+    }
+  }
+  const lineRe = /(\d{2}\/\d{2}(?:\/\d{2,4})?)\s+(.+?)\s+(-?R?\$?\s?-?\d[\d.,]*)\s*$/;
+  const rows = [];
+  for (const line of lines) {
+    const m = line.match(lineRe);
+    if (m) rows.push(rowFromParts(m[1], m[2], m[3]));
+  }
+  return rows.filter(Boolean);
+}
 
-  const saldoEl = document.getElementById("saldoVal");
-  saldoEl.textContent = fmt(saldo);
-  saldoEl.style.color = saldo >= 0 ? "var(--green)" : "var(--red)";
-  document.getElementById("incomeVal").textContent = fmt(income);
-  document.getElementById("expenseVal").textContent = fmt(expense);
+function rowFromParts(rawDate, rawDesc, rawValue) {
+  if (rawDate === undefined || rawValue === undefined) return null;
+  let date = (rawDate || "").trim();
+  const dm = date.match(/^(\d{2})\/(\d{2})(?:\/(\d{2,4}))?$/);
+  if (dm) {
+    let year = dm[3] || String(new Date().getFullYear());
+    if (year.length === 2) year = `20${year}`;
+    date = `${year}-${dm[2]}-${dm[1]}`;
+  } else if (!date.match(/^(\d{4})-(\d{2})-(\d{2})/)) return null;
+  const cleanValue = (rawValue || "0").replace(/r\$/gi, "").replace(/\s/g, "").replace(/\./g, "").replace(",", ".");
+  const value = Number(cleanValue);
+  if (isNaN(value)) return null;
+  return { date, description: (rawDesc || "").trim(), value };
+}
 
-  const map = {};
-  tx.filter(t=>t.type==="expense").forEach(t => { map[t.category] = (map[t.category]||0) + t.amount; });
-  const byCat = Object.entries(map).map(([id,total]) => ({...catById(id), id, total})).sort((a,b)=>b.total-a.total);
-  const catSection = document.getElementById("catSection");
-  const catList = document.getElementById("catList");
-  if (byCat.length === 0){
-    catSection.style.display = "none";
-  } else {
-    catSection.style.display = "block";
-    const max = byCat[0].total;
-    catList.innerHTML = byCat.slice(0,5).map(c => `
-      <div class="catrow">
-        <div class="caticon" style="background:${c.color}26;">${c.icon}</div>
-        <div class="catbar-wrap">
-          <div class="catbar-top"><span class="name">${c.label}</span><span class="amt">${fmt(c.total)}</span></div>
-          <div class="catbar-track"><div class="catbar-fill" style="width:${(c.total/max)*100}%;background:${c.color};"></div></div>
+function useStore() {
+  const [state, setState] = useState(null);
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      const rules = localStorage.getItem(RULES_KEY);
+      setState({
+        accounts: raw ? JSON.parse(raw).accounts : [],
+        entries: raw ? JSON.parse(raw).entries : [],
+        customRules: rules ? JSON.parse(rules) : [],
+      });
+    } catch (e) {
+      setState({ accounts: [], entries: [], customRules: [] });
+    }
+  }, []);
+  const persist = (next) => {
+    setState(next);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ accounts: next.accounts, entries: next.entries }));
+      localStorage.setItem(RULES_KEY, JSON.stringify(next.customRules || []));
+    } catch (e) { console.error("Falha ao salvar", e); }
+  };
+  return [state, persist];
+}
+
+// ---------- App ----------
+function App() {
+  const [data, persist] = useStore();
+  const [tab, setTab] = useState("visao");
+  const [showEntryForm, setShowEntryForm] = useState(false);
+  const [editingEntry, setEditingEntry] = useState(null);
+  const [showAccountForm, setShowAccountForm] = useState(false);
+  const [showImport, setShowImport] = useState(false);
+
+  if (!data) {
+    return <div style={{ background: PAPER, minHeight: "100vh" }} className="flex items-center justify-center">
+      <div style={{ color: INK }} className="text-sm opacity-70">Abrindo o livro-caixa…</div>
+    </div>;
+  }
+
+  const { accounts, entries, customRules } = data;
+  const addAccount = (acc) => persist({ ...data, accounts: [...accounts, acc] });
+  const removeAccount = (id) => persist({ ...data, accounts: accounts.filter((a) => a.id !== id), entries: entries.filter((e) => e.accountId !== id) });
+
+  const learnRule = (description, type, category) => {
+    const norm = normalize(description);
+    if (!norm || norm.length < 3) return customRules;
+    const already = classify(description, customRules);
+    if (already && already.category === category && already.type === type) return customRules;
+    const firstWord = norm.split(" ").slice(0, 2).join(" ");
+    return [{ kw: firstWord, type, category }, ...customRules.filter((r) => r.kw !== firstWord)];
+  };
+
+  const saveEntry = (entry) => {
+    const exists = entries.some((e) => e.id === entry.id);
+    const next = exists ? entries.map((e) => (e.id === entry.id ? entry : e)) : [...entries, entry];
+    const nextRules = learnRule(entry.description, entry.type, entry.category);
+    persist({ ...data, entries: next, customRules: nextRules });
+  };
+  const removeEntry = (id) => persist({ ...data, entries: entries.filter((e) => e.id !== id) });
+  const importEntries = (rows) => persist({ ...data, entries: [...entries, ...rows] });
+
+  return (
+    <div style={{ background: PAPER, color: INK, minHeight: "100vh" }}>
+      <Header accounts={accounts} entries={entries} onNewEntry={() => { setEditingEntry(null); setShowEntryForm(true); }} onImport={() => setShowImport(true)} />
+      <nav className="sticky top-0 z-20 flex gap-1 px-4 md:px-8 pt-2 overflow-x-auto" style={{ background: PAPER, borderBottom: `1px solid ${PAPER_LINE}` }}>
+        {[["visao","Visão geral"],["mensal","Mês a mês"],["semestral","Semestral"],["recorrencias","Recorrências"],["relatorio","Relatório PDF"],["lancamentos","Lançamentos"],["contas","Contas"]].map(([key,label]) => (
+          <button key={key} onClick={() => setTab(key)} className="px-3 md:px-4 py-2 text-sm rounded-t-md whitespace-nowrap font-serif" style={{ fontWeight: 500, color: tab === key ? INK : "#7a7263", background: tab === key ? CARD : "transparent", borderBottom: tab === key ? `2px solid ${LEDGER_GREEN}` : "2px solid transparent" }}>{label}</button>
+        ))}
+      </nav>
+      <main className="px-4 md:px-8 py-6 max-w-5xl mx-auto">
+        {tab === "visao" && <Overview accounts={accounts} entries={entries} onImport={() => setShowImport(true)} />}
+        {tab === "mensal" && <MonthlyDashboard entries={entries} />}
+        {tab === "semestral" && <SemesterDashboard entries={entries} />}
+        {tab === "recorrencias" && <RecurringTab entries={entries} />}
+        {tab === "relatorio" && <ReportTab accounts={accounts} entries={entries} />}
+        {tab === "lancamentos" && <EntriesTab accounts={accounts} entries={entries} onEdit={(e) => { setEditingEntry(e); setShowEntryForm(true); }} onDelete={removeEntry} onImport={() => setShowImport(true)} />}
+        {tab === "contas" && <AccountsTab accounts={accounts} entries={entries} onAdd={() => setShowAccountForm(true)} onRemove={removeAccount} />}
+      </main>
+      {showEntryForm && <EntryModal accounts={accounts} entry={editingEntry} customRules={customRules} onClose={() => setShowEntryForm(false)} onSave={(e) => { saveEntry(e); setShowEntryForm(false); }} />}
+      {showAccountForm && <AccountModal onClose={() => setShowAccountForm(false)} onSave={(a) => { addAccount(a); setShowAccountForm(false); }} />}
+      {showImport && <ImportModal accounts={accounts} customRules={customRules} onClose={() => setShowImport(false)} onImport={(rows) => { importEntries(rows); setShowImport(false); }} />}
+    </div>
+  );
+}
+
+function Header({ accounts, entries, onNewEntry, onImport }) {
+  const saldo = useMemo(() => entries.reduce((s, e) => s + TYPE_META[e.type].sign * e.value, 0), [entries]);
+  return (
+    <header className="px-4 md:px-8 pt-8 pb-6 flex flex-wrap items-end justify-between gap-4" style={{ borderBottom: `1px solid ${PAPER_LINE}` }}>
+      <div>
+        <div className="flex items-center gap-2 opacity-60 text-xs tracking-[0.2em] uppercase mb-1"><IWallet size={14}/> Meus Gastos</div>
+        <h1 className="font-serif text-3xl md:text-4xl" style={{ fontWeight: 600 }}>Livro-caixa pessoal</h1>
+        <div className="text-sm opacity-60 mt-1">{accounts.length} {accounts.length === 1 ? "conta" : "contas"} · {entries.length} lançamentos</div>
+      </div>
+      <div className="flex items-end gap-3 flex-wrap">
+        <div>
+          <div className="text-xs uppercase tracking-wide opacity-60">Saldo total</div>
+          <div className="font-mono text-2xl md:text-3xl" style={{ color: saldo >= 0 ? LEDGER_GREEN : LEDGER_RED }}>{currency(saldo)}</div>
+        </div>
+        <button onClick={onImport} className="flex items-center gap-2 px-3 py-2.5 rounded-md text-sm font-medium" style={{ border: `1px solid ${PAPER_LINE}`, color: INK }}><IFiles size={16}/> Importar faturas</button>
+        <button onClick={onNewEntry} className="flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium active:scale-95" style={{ background: INK, color: PAPER }}><IPlus size={16}/> Novo lançamento</button>
+      </div>
+    </header>
+  );
+}
+
+// ---------- Mini gráficos CSS (sem libs) ----------
+function BarRow({ label, value, max, color }) {
+  const pct = max > 0 ? Math.max(2, (value / max) * 100) : 0;
+  return (
+    <div className="flex items-center gap-3 mb-2">
+      <div className="w-16 text-xs opacity-60 shrink-0">{label}</div>
+      <div className="flex-1 h-3 rounded-full" style={{ background: PAPER_LINE }}>
+        <div className="h-3 rounded-full" style={{ width: pct + "%", background: color }} />
+      </div>
+      <div className="w-24 text-xs font-mono text-right shrink-0">{currency(value)}</div>
+    </div>
+  );
+}
+
+function MonthBars({ data }) {
+  const max = Math.max(1, ...data.flatMap((m) => [m.receita, m.despesa]));
+  return (
+    <div className="flex items-end gap-3 overflow-x-auto pb-2" style={{ minHeight: 160 }}>
+      {data.map((m) => (
+        <div key={m.ym} className="flex flex-col items-center gap-1 shrink-0" style={{ width: 46 }}>
+          <div className="flex items-end gap-1" style={{ height: 120 }}>
+            <div title={currency(m.receita)} style={{ width: 10, height: Math.max(3, (m.receita / max) * 120), background: LEDGER_GREEN, borderRadius: 2 }} />
+            <div title={currency(m.despesa)} style={{ width: 10, height: Math.max(3, (m.despesa / max) * 120), background: LEDGER_RED, borderRadius: 2 }} />
+          </div>
+          <div className="text-[10px] opacity-60 text-center">{m.label}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function CategoryDonut({ data }) {
+  const palette = [LEDGER_RED, "#c96a4f", "#d99a5b", LEDGER_GOLD, "#8a9a5b", "#5b8a7a", "#4f7d8a", "#6f5b8a", "#9a5b7a", "#7a6f5b"];
+  const total = data.reduce((s, d) => s + d.value, 0) || 1;
+  let acc = 0;
+  const stops = data.map((d, i) => {
+    const start = (acc / total) * 360;
+    acc += d.value;
+    const end = (acc / total) * 360;
+    return `${palette[i % palette.length]} ${start}deg ${end}deg`;
+  });
+  return (
+    <div className="flex items-center gap-6">
+      <div style={{ width: 140, height: 140, borderRadius: "50%", background: `conic-gradient(${stops.join(",")})`, flexShrink: 0 }} />
+      <div className="flex flex-col gap-1">
+        {data.slice(0, 7).map((d, i) => (
+          <div key={d.name} className="flex items-center gap-2 text-xs">
+            <span className="w-2.5 h-2.5 rounded-full inline-block shrink-0" style={{ background: palette[i % palette.length] }} />
+            <span className="opacity-70">{d.name}</span>
+            <span className="font-mono opacity-60">{currency(d.value)}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Overview({ accounts, entries, onImport }) {
+  const totals = useMemo(() => { const t = { receita: 0, despesa: 0, investimento: 0 }; entries.forEach((e) => (t[e.type] += e.value)); return t; }, [entries]);
+  const byMonth = useMemo(() => {
+    const map = {};
+    entries.forEach((e) => { const ym = e.date.slice(0,7); if (!map[ym]) map[ym] = { ym, receita:0, despesa:0, investimento:0 }; map[ym][e.type] += e.value; });
+    return Object.values(map).sort((a,b) => a.ym.localeCompare(b.ym)).slice(-8).map((m) => ({ ...m, label: monthLabel(m.ym) }));
+  }, [entries]);
+  const byCategory = useMemo(() => {
+    const map = {};
+    entries.filter((e) => e.type === "despesa").forEach((e) => (map[e.category] = (map[e.category] || 0) + e.value));
+    return Object.entries(map).map(([name, value]) => ({ name, value })).sort((a,b) => b.value - a.value);
+  }, [entries]);
+
+  if (entries.length === 0) {
+    return <EmptyState title="O livro ainda está em branco" body="Importe as faturas de todos os meses até agora, ou registre seu primeiro lançamento manualmente." action={<button onClick={onImport} className="mt-2 flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium" style={{ background: INK, color: PAPER }}><IFiles size={14}/> Importar faturas</button>} />;
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <SummaryCard label="Receitas" value={totals.receita} color={LEDGER_GREEN} I={ITrendUp} />
+        <SummaryCard label="Despesas" value={totals.despesa} color={LEDGER_RED} I={ITrendDown} />
+        <SummaryCard label="Investimentos" value={totals.investimento} color={LEDGER_GOLD} I={IPiggy} />
+      </div>
+      <div className="rounded-lg p-5" style={{ background: CARD, border: `1px solid ${PAPER_LINE}` }}>
+        <div className="font-serif text-lg mb-4">Evolução mensal</div>
+        <MonthBars data={byMonth} />
+        <div className="flex gap-4 mt-1 text-xs opacity-60">
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{ background: LEDGER_GREEN }} />Receita</span>
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{ background: LEDGER_RED }} />Despesa</span>
         </div>
       </div>
-    `).join("");
-  }
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="rounded-lg p-5" style={{ background: CARD, border: `1px solid ${PAPER_LINE}` }}>
+          <div className="font-serif text-lg mb-4">Despesas por categoria</div>
+          {byCategory.length === 0 ? <div className="text-sm opacity-60">Sem despesas registradas ainda.</div> : <CategoryDonut data={byCategory} />}
+        </div>
+        <div className="rounded-lg p-5" style={{ background: CARD, border: `1px solid ${PAPER_LINE}` }}>
+          <div className="font-serif text-lg mb-4">Saldo por conta</div>
+          {(() => {
+            const rows = accounts.map((a) => ({ name: a.name, saldo: entries.filter((e) => e.accountId === a.id).reduce((s,e) => s + TYPE_META[e.type].sign * e.value, 0) }));
+            const max = Math.max(1, ...rows.map((r) => Math.abs(r.saldo)));
+            return rows.map((r) => <BarRow key={r.name} label={r.name} value={r.saldo} max={max} color={r.saldo >= 0 ? LEDGER_GREEN : LEDGER_RED} />);
+          })()}
+        </div>
+      </div>
+    </div>
+  );
+}
 
-  const grouped = {};
-  tx.forEach(t => { (grouped[t.date] = grouped[t.date] || []).push(t); });
-  const days = Object.keys(grouped).sort((a,b)=> a<b?1:-1);
-  const container = document.getElementById("txContainer");
-  if (days.length === 0){
-    container.innerHTML = `<div class="empty"><div class="big">🏦</div><p>Nenhum lançamento neste mês.</p><p>Toque em + para adicionar o primeiro.</p></div>`;
-  } else {
-    container.innerHTML = days.map(day => {
-      const items = grouped[day].slice().sort((a,b)=> (b.id||"").localeCompare(a.id||""));
-      const rows = items.map(t => {
-        const isIncome = t.type === "income";
-        const c = catById(t.category);
-        const icon = isIncome ? "↗" : c.icon;
-        const color = isIncome ? "#37D6A0" : c.color;
-        const title = isIncome ? "Receita" : c.label;
-        return `
-          <div class="tx">
-            <div class="icon" style="background:${color}26;color:${color};">${icon}</div>
-            <div class="info">
-              <div class="title">${title}</div>
-              ${t.note ? `<div class="note">${escapeHtml(t.note)}</div>` : ""}
+function SummaryCard({ label, value, color, I }) {
+  return (
+    <div className="rounded-lg p-5 flex items-center justify-between" style={{ background: CARD, border: `1px solid ${PAPER_LINE}` }}>
+      <div><div className="text-xs uppercase tracking-wide opacity-60 mb-1">{label}</div><div className="font-mono text-xl" style={{ color }}>{currency(value)}</div></div>
+      <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: `${color}1a` }}><I size={18} color={color} /></div>
+    </div>
+  );
+}
+
+function EmptyState({ title, body, action }) {
+  return (
+    <div className="rounded-lg p-10 text-center flex flex-col items-center gap-3" style={{ background: CARD, border: `1px dashed ${PAPER_LINE}` }}>
+      <div className="font-serif text-xl">{title}</div>
+      <div className="text-sm opacity-60 max-w-md">{body}</div>
+      {action}
+    </div>
+  );
+}
+
+function MonthlyDashboard({ entries }) {
+  const months = useMemo(() => {
+    const map = {};
+    entries.forEach((e) => { const ym = e.date.slice(0,7); if (!map[ym]) map[ym] = { ym, receita:0, despesa:0, investimento:0, categorias:{} }; map[ym][e.type]+=e.value; if (e.type==="despesa") map[ym].categorias[e.category]=(map[ym].categorias[e.category]||0)+e.value; });
+    return Object.values(map).sort((a,b) => b.ym.localeCompare(a.ym));
+  }, [entries]);
+  if (months.length === 0) return <EmptyState title="Nada ainda" body="Importe faturas ou registre lançamentos para ver o detalhamento mês a mês." />;
+  return (
+    <div className="flex flex-col gap-3">
+      {months.map((m) => {
+        const saldo = m.receita - m.despesa - m.investimento;
+        const topCats = Object.entries(m.categorias).sort((a,b) => b[1]-a[1]).slice(0,3);
+        return (
+          <div key={m.ym} className="rounded-lg p-4" style={{ background: CARD, border: `1px solid ${PAPER_LINE}` }}>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="font-serif text-lg">{monthLabel(m.ym)}</div>
+              <div className="flex gap-5 text-sm">
+                <span style={{ color: LEDGER_GREEN }} className="font-mono">+{currency(m.receita)}</span>
+                <span style={{ color: LEDGER_RED }} className="font-mono">−{currency(m.despesa)}</span>
+                <span style={{ color: LEDGER_GOLD }} className="font-mono">↷{currency(m.investimento)}</span>
+                <span className="font-mono font-medium" style={{ color: saldo >= 0 ? LEDGER_GREEN : LEDGER_RED }}>= {currency(saldo)}</span>
+              </div>
             </div>
-            <div class="amt" style="color:${isIncome ? "var(--green)" : "#dde3ee"};">${isIncome?"+":"-"}${fmt(t.amount)}</div>
-            <button class="del" data-id="${t.id}">🗑</button>
+            {topCats.length > 0 && <div className="flex flex-wrap gap-2 mt-3">{topCats.map(([cat,val]) => <div key={cat} className="text-xs px-2 py-1 rounded-full" style={{ background: `${LEDGER_RED}12`, color: LEDGER_RED }}>{cat}: {currency(val)}</div>)}</div>}
           </div>
-        `;
-      }).join("");
-      return `<div class="daylabel">${formatDayLabel(day)}</div><div class="txlist">${rows}</div>`;
-    }).join("");
-    container.querySelectorAll(".del").forEach(btn => {
-      btn.addEventListener("click", () => {
-        transactions = transactions.filter(t => t.id !== btn.dataset.id);
-        saveData();
-        render();
-      });
+        );
+      })}
+    </div>
+  );
+}
+
+function SemesterDashboard({ entries }) {
+  const semesters = useMemo(() => {
+    const map = {};
+    entries.forEach((e) => { const ym = e.date.slice(0,7); const key = semesterLabel(ym); if (!map[key]) map[key] = { key, receita:0, despesa:0, investimento:0, categorias:{} }; map[key][e.type]+=e.value; if (e.type==="despesa") map[key].categorias[e.category]=(map[key].categorias[e.category]||0)+e.value; });
+    return Object.values(map).sort((a,b) => a.key.localeCompare(b.key));
+  }, [entries]);
+  if (semesters.length === 0) return <EmptyState title="Nada ainda" body="Importe faturas ou registre lançamentos para ver o resumo semestral." />;
+  const max = Math.max(1, ...semesters.flatMap((s) => [s.receita, s.despesa, s.investimento]));
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="rounded-lg p-5" style={{ background: CARD, border: `1px solid ${PAPER_LINE}` }}>
+        <div className="font-serif text-lg mb-4">Comparativo por semestre</div>
+        <div className="flex gap-8 overflow-x-auto">
+          {semesters.map((s) => (
+            <div key={s.key} className="flex flex-col items-center gap-1 shrink-0">
+              <div className="flex items-end gap-1.5" style={{ height: 120 }}>
+                <div style={{ width: 16, height: Math.max(3,(s.receita/max)*120), background: LEDGER_GREEN, borderRadius: 3 }} title={currency(s.receita)} />
+                <div style={{ width: 16, height: Math.max(3,(s.despesa/max)*120), background: LEDGER_RED, borderRadius: 3 }} title={currency(s.despesa)} />
+                <div style={{ width: 16, height: Math.max(3,(s.investimento/max)*120), background: LEDGER_GOLD, borderRadius: 3 }} title={currency(s.investimento)} />
+              </div>
+              <div className="text-xs opacity-70 mt-1">{s.key}</div>
+            </div>
+          ))}
+        </div>
+        <div className="flex gap-4 mt-3 text-xs opacity-60">
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{background:LEDGER_GREEN}}/>Receita</span>
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{background:LEDGER_RED}}/>Despesa</span>
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{background:LEDGER_GOLD}}/>Investimento</span>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {semesters.map((s) => {
+          const saldo = s.receita - s.despesa - s.investimento;
+          const topCats = Object.entries(s.categorias).sort((a,b) => b[1]-a[1]).slice(0,4);
+          return (
+            <div key={s.key} className="rounded-lg p-4" style={{ background: CARD, border: `1px solid ${PAPER_LINE}` }}>
+              <div className="font-serif text-lg mb-2">{s.key}</div>
+              <div className="flex flex-col gap-1 text-sm font-mono mb-3">
+                <div style={{ color: LEDGER_GREEN }}>Receitas: {currency(s.receita)}</div>
+                <div style={{ color: LEDGER_RED }}>Despesas: {currency(s.despesa)}</div>
+                <div style={{ color: LEDGER_GOLD }}>Investido: {currency(s.investimento)}</div>
+                <div className="pt-1" style={{ borderTop: `1px solid ${PAPER_LINE}`, color: saldo >= 0 ? LEDGER_GREEN : LEDGER_RED }}>Saldo: {currency(saldo)}</div>
+              </div>
+              {topCats.length > 0 && <div className="flex flex-col gap-1">{topCats.map(([cat,val]) => <div key={cat} className="flex justify-between text-xs opacity-70"><span>{cat}</span><span className="font-mono">{currency(val)}</span></div>)}</div>}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function RecurringTab({ entries }) {
+  const recurring = useMemo(() => detectRecurring(entries), [entries]);
+  const monthlyTotal = recurring.reduce((s,r) => s + r.avgValue, 0);
+  if (recurring.length === 0) return <EmptyState title="Nenhuma recorrência identificada ainda" body="Assim que uma despesa parecida aparecer em pelo menos dois meses diferentes — como Netflix, academia ou aluguel — ela aparece aqui automaticamente." />;
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="rounded-lg p-5 flex items-center justify-between" style={{ background: CARD, border: `1px solid ${PAPER_LINE}` }}>
+        <div><div className="text-xs uppercase tracking-wide opacity-60 mb-1">Comprometido por mês em recorrências</div><div className="font-mono text-2xl" style={{ color: LEDGER_RED }}>{currency(monthlyTotal)}</div></div>
+        <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: `${LEDGER_RED}1a` }}><IRepeat size={18} color={LEDGER_RED} /></div>
+      </div>
+      <div className="rounded-lg overflow-hidden" style={{ border: `1px solid ${PAPER_LINE}`, background: CARD }}>
+        {recurring.map((r,i) => (
+          <div key={r.key} className="flex items-center gap-3 px-4 py-3" style={{ borderTop: i===0?"none":`1px solid ${PAPER_LINE}` }}>
+            <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ background: `${LEDGER_RED}1a` }}><IRepeat size={14} color={LEDGER_RED} /></div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-medium truncate">{r.label}</div>
+              <div className="text-xs opacity-60">{r.category} · aparece em {r.months.length} meses ({r.months.map(monthLabel).join(", ")})</div>
+            </div>
+            <div className="font-mono text-sm shrink-0" style={{ color: LEDGER_RED }}>~{currency(r.avgValue)}/mês</div>
+          </div>
+        ))}
+      </div>
+      <div className="text-xs opacity-50">Detecção automática por semelhança de descrição e valor — confira antes de cortar gastos com base nela.</div>
+    </div>
+  );
+}
+
+function ReportTab({ accounts, entries }) {
+  const [scope, setScope] = useState("todos");
+  const months = useMemo(() => {
+    const map = {};
+    entries.forEach((e) => { const ym = e.date.slice(0,7); if (!map[ym]) map[ym] = { ym, receita:0, despesa:0, investimento:0, categorias:{} }; map[ym][e.type]+=e.value; if (e.type==="despesa") map[ym].categorias[e.category]=(map[ym].categorias[e.category]||0)+e.value; });
+    return Object.values(map).sort((a,b) => a.ym.localeCompare(b.ym));
+  }, [entries]);
+  const semesters = useMemo(() => {
+    const map = {};
+    entries.forEach((e) => { const ym = e.date.slice(0,7); const key = semesterLabel(ym); if (!map[key]) map[key] = { key, receita:0, despesa:0, investimento:0, categorias:{} }; map[key][e.type]+=e.value; if (e.type==="despesa") map[key].categorias[e.category]=(map[key].categorias[e.category]||0)+e.value; });
+    return Object.values(map).sort((a,b) => a.key.localeCompare(b.key));
+  }, [entries]);
+  const recurring = useMemo(() => detectRecurring(entries), [entries]);
+  const totals = useMemo(() => { const t = { receita:0, despesa:0, investimento:0 }; entries.forEach((e) => (t[e.type]+=e.value)); return t; }, [entries]);
+  const today = new Date().toLocaleDateString("pt-BR", { day:"2-digit", month:"long", year:"numeric" });
+  if (entries.length === 0) return <EmptyState title="Nada para gerar ainda" body="Importe faturas ou registre lançamentos antes de gerar o relatório." />;
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="no-print flex flex-wrap items-center justify-between gap-3">
+        <select value={scope} onChange={(e) => setScope(e.target.value)} className="text-sm px-3 py-2 rounded-md bg-transparent" style={{ border: `1px solid ${PAPER_LINE}`, color: INK }}>
+          <option value="todos">Todos os meses</option>
+          <option value="mensal">Detalhado mês a mês</option>
+          <option value="semestral">Resumo semestral</option>
+        </select>
+        <button onClick={() => window.print()} className="flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium" style={{ background: INK, color: PAPER }}><IPrinter size={16}/> Exportar como PDF</button>
+      </div>
+      <div className="no-print text-xs opacity-60 flex items-start gap-1.5"><IInfo size={13} className="shrink-0 mt-0.5"/> Ao clicar em "Exportar como PDF", use a opção "Salvar como PDF" na janela de impressão do navegador.</div>
+      <div className="rounded-lg p-6" style={{ background: CARD, border: `1px solid ${PAPER_LINE}` }}>
+        <div className="mb-6" style={{ borderBottom: `1px solid ${PAPER_LINE}`, paddingBottom: 12 }}>
+          <div className="font-serif text-2xl">Relatório financeiro — Meus Gastos</div>
+          <div className="text-xs opacity-60 mt-1">Gerado em {today} · {accounts.length} contas · {entries.length} lançamentos</div>
+        </div>
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          <div><div className="text-xs uppercase tracking-wide opacity-60">Receitas</div><div className="font-mono text-lg" style={{ color: LEDGER_GREEN }}>{currency(totals.receita)}</div></div>
+          <div><div className="text-xs uppercase tracking-wide opacity-60">Despesas</div><div className="font-mono text-lg" style={{ color: LEDGER_RED }}>{currency(totals.despesa)}</div></div>
+          <div><div className="text-xs uppercase tracking-wide opacity-60">Investimentos</div><div className="font-mono text-lg" style={{ color: LEDGER_GOLD }}>{currency(totals.investimento)}</div></div>
+        </div>
+        {scope === "mensal" && <div className="flex flex-col gap-4">{months.map((m) => (
+          <div key={m.ym} style={{ pageBreakInside: "avoid" }}>
+            <div className="font-serif text-base mb-1">{monthLabel(m.ym)}</div>
+            <table className="w-full text-sm" style={{ borderCollapse: "collapse" }}><tbody>
+              <tr><td className="py-0.5 opacity-70">Receitas</td><td className="py-0.5 text-right font-mono" style={{ color: LEDGER_GREEN }}>{currency(m.receita)}</td></tr>
+              <tr><td className="py-0.5 opacity-70">Despesas</td><td className="py-0.5 text-right font-mono" style={{ color: LEDGER_RED }}>{currency(m.despesa)}</td></tr>
+              <tr><td className="py-0.5 opacity-70">Investimentos</td><td className="py-0.5 text-right font-mono" style={{ color: LEDGER_GOLD }}>{currency(m.investimento)}</td></tr>
+              {Object.entries(m.categorias).sort((a,b) => b[1]-a[1]).map(([cat,val]) => <tr key={cat}><td className="py-0.5 pl-4 text-xs opacity-60">{cat}</td><td className="py-0.5 text-right font-mono text-xs opacity-60">{currency(val)}</td></tr>)}
+            </tbody></table>
+          </div>
+        ))}</div>}
+        {scope === "semestral" && <div className="flex flex-col gap-4">{semesters.map((s) => (
+          <div key={s.key} style={{ pageBreakInside: "avoid" }}>
+            <div className="font-serif text-base mb-1">{s.key}</div>
+            <table className="w-full text-sm" style={{ borderCollapse: "collapse" }}><tbody>
+              <tr><td className="py-0.5 opacity-70">Receitas</td><td className="py-0.5 text-right font-mono" style={{ color: LEDGER_GREEN }}>{currency(s.receita)}</td></tr>
+              <tr><td className="py-0.5 opacity-70">Despesas</td><td className="py-0.5 text-right font-mono" style={{ color: LEDGER_RED }}>{currency(s.despesa)}</td></tr>
+              <tr><td className="py-0.5 opacity-70">Investimentos</td><td className="py-0.5 text-right font-mono" style={{ color: LEDGER_GOLD }}>{currency(s.investimento)}</td></tr>
+              {Object.entries(s.categorias).sort((a,b) => b[1]-a[1]).map(([cat,val]) => <tr key={cat}><td className="py-0.5 pl-4 text-xs opacity-60">{cat}</td><td className="py-0.5 text-right font-mono text-xs opacity-60">{currency(val)}</td></tr>)}
+            </tbody></table>
+          </div>
+        ))}</div>}
+        {scope === "todos" && <table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
+          <thead><tr style={{ borderBottom: `1px solid ${PAPER_LINE}` }}>
+            <th className="text-left py-1 font-medium">Mês</th>
+            <th className="text-right py-1 font-medium" style={{ color: LEDGER_GREEN }}>Receita</th>
+            <th className="text-right py-1 font-medium" style={{ color: LEDGER_RED }}>Despesa</th>
+            <th className="text-right py-1 font-medium" style={{ color: LEDGER_GOLD }}>Investido</th>
+            <th className="text-right py-1 font-medium">Saldo</th>
+          </tr></thead>
+          <tbody>{months.map((m) => { const saldo = m.receita - m.despesa - m.investimento; return (
+            <tr key={m.ym} style={{ borderBottom: `1px solid ${PAPER_LINE}` }}>
+              <td className="py-1">{monthLabel(m.ym)}</td>
+              <td className="py-1 text-right font-mono">{currency(m.receita)}</td>
+              <td className="py-1 text-right font-mono">{currency(m.despesa)}</td>
+              <td className="py-1 text-right font-mono">{currency(m.investimento)}</td>
+              <td className="py-1 text-right font-mono" style={{ color: saldo>=0?LEDGER_GREEN:LEDGER_RED }}>{currency(saldo)}</td>
+            </tr>
+          ); })}</tbody>
+        </table>}
+        {recurring.length > 0 && <div className="mt-6" style={{ borderTop: `1px solid ${PAPER_LINE}`, paddingTop: 12, pageBreakInside: "avoid" }}>
+          <div className="font-serif text-base mb-2">Gastos recorrentes identificados</div>
+          <table className="w-full text-sm" style={{ borderCollapse: "collapse" }}><tbody>
+            {recurring.map((r) => <tr key={r.key}><td className="py-0.5">{r.label}</td><td className="py-0.5 text-xs opacity-60">{r.category}</td><td className="py-0.5 text-right font-mono">~{currency(r.avgValue)}/mês</td></tr>)}
+          </tbody></table>
+        </div>}
+      </div>
+    </div>
+  );
+}
+
+function EntriesTab({ accounts, entries, onEdit, onDelete, onImport }) {
+  const [filterType, setFilterType] = useState("todos");
+  const [filterAccount, setFilterAccount] = useState("todas");
+  const accountName = (id) => accounts.find((a) => a.id === id)?.name || "—";
+  const filtered = entries.filter((e) => filterType==="todos"||e.type===filterType).filter((e) => filterAccount==="todas"||e.accountId===filterAccount).sort((a,b) => b.date.localeCompare(a.date));
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap items-center gap-2 justify-between">
+        <div className="flex flex-wrap gap-2">
+          <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="text-sm px-3 py-2 rounded-md bg-transparent" style={{ border: `1px solid ${PAPER_LINE}`, color: INK }}>
+            <option value="todos">Todos os tipos</option>
+            {Object.entries(TYPE_META).map(([k,v]) => <option key={k} value={k}>{v.label}</option>)}
+          </select>
+          <select value={filterAccount} onChange={(e) => setFilterAccount(e.target.value)} className="text-sm px-3 py-2 rounded-md bg-transparent" style={{ border: `1px solid ${PAPER_LINE}`, color: INK }}>
+            <option value="todas">Todas as contas</option>
+            {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+          </select>
+        </div>
+        <button onClick={onImport} className="flex items-center gap-2 px-3 py-2 rounded-md text-sm" style={{ border: `1px solid ${PAPER_LINE}`, color: INK }}><IFiles size={14}/> Importar faturas</button>
+      </div>
+      {filtered.length === 0 ? <EmptyState title="Nada por aqui" body="Nenhum lançamento corresponde a este filtro." /> : (
+        <div className="rounded-lg overflow-hidden" style={{ border: `1px solid ${PAPER_LINE}`, background: CARD }}>
+          {filtered.map((e,i) => { const meta = TYPE_META[e.type]; const I = meta.Icon; return (
+            <div key={e.id} className="flex items-center gap-3 px-4 py-3" style={{ borderTop: i===0?"none":`1px solid ${PAPER_LINE}` }}>
+              <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ background: `${meta.color}1a` }}><I size={15} color={meta.color} /></div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium truncate">{e.description || meta.label}</div>
+                <div className="text-xs opacity-60">{new Date(e.date+"T00:00:00").toLocaleDateString("pt-BR")} · {e.category} · {accountName(e.accountId)}{e.auto && <span className="ml-1.5 inline-flex items-center gap-0.5" style={{ color: LEDGER_GOLD }}><ISparkle size={10}/> auto</span>}</div>
+              </div>
+              <div className="font-mono text-sm shrink-0" style={{ color: meta.color }}>{meta.sign>0?"+":"−"} {currency(e.value)}</div>
+              <div className="flex gap-1 shrink-0">
+                <button onClick={() => onEdit(e)} className="w-7 h-7 rounded-md flex items-center justify-center opacity-50 hover:opacity-100" style={{ border: `1px solid ${PAPER_LINE}` }}><IPencil size={13}/></button>
+                <button onClick={() => onDelete(e.id)} className="w-7 h-7 rounded-md flex items-center justify-center opacity-50 hover:opacity-100" style={{ border: `1px solid ${PAPER_LINE}` }}><ITrash size={13}/></button>
+              </div>
+            </div>
+          ); })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AccountsTab({ accounts, entries, onAdd, onRemove }) {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex justify-between items-center">
+        <div className="font-serif text-lg">Suas contas</div>
+        <button onClick={onAdd} className="flex items-center gap-2 px-3 py-2 rounded-md text-sm" style={{ background: INK, color: PAPER }}><IPlus size={14}/> Nova conta</button>
+      </div>
+      {accounts.length === 0 ? <EmptyState title="Nenhuma conta cadastrada" body="Cadastre suas contas correntes, cartões e investimentos para organizar os lançamentos." /> : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {accounts.map((a) => { const saldo = entries.filter((e) => e.accountId===a.id).reduce((s,e) => s + TYPE_META[e.type].sign*e.value, 0); return (
+            <div key={a.id} className="rounded-lg p-4 flex items-center justify-between" style={{ background: CARD, border: `1px solid ${PAPER_LINE}` }}>
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: `${INK}0d` }}><ILandmark size={16}/></div>
+                <div><div className="text-sm font-medium">{a.name}</div><div className="text-xs opacity-60">{a.type}</div></div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="font-mono text-sm" style={{ color: saldo>=0?LEDGER_GREEN:LEDGER_RED }}>{currency(saldo)}</div>
+                <button onClick={() => onRemove(a.id)} className="w-7 h-7 rounded-md flex items-center justify-center opacity-50 hover:opacity-100" style={{ border: `1px solid ${PAPER_LINE}` }}><ITrash size={13}/></button>
+              </div>
+            </div>
+          ); })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ModalShell({ title, onClose, children, wide }) {
+  return (
+    <div className="fixed inset-0 z-30 flex items-end md:items-center justify-center" style={{ background: "#1f2e2866" }}>
+      <div className={`w-full ${wide ? "md:max-w-xl" : "md:max-w-sm"} rounded-t-xl md:rounded-xl p-5 max-h-[90vh] overflow-y-auto`} style={{ background: PAPER, border: `1px solid ${PAPER_LINE}` }}>
+        <div className="flex items-center justify-between mb-4"><div className="font-serif text-lg">{title}</div><button onClick={onClose} className="opacity-50 hover:opacity-100"><IX size={18}/></button></div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function Field({ label, children }) {
+  return <label className="flex flex-col gap-1 text-sm"><span className="text-xs uppercase tracking-wide opacity-60">{label}</span>{children}</label>;
+}
+
+const inputStyle = { border: `1px solid ${PAPER_LINE}`, background: CARD, color: INK, borderRadius: 6, padding: "8px 10px", fontSize: 14, width: "100%" };
+
+function EntryModal({ accounts, entry, customRules, onClose, onSave }) {
+  const [type, setType] = useState(entry?.type || "despesa");
+  const [value, setValue] = useState(entry?.value ?? "");
+  const [date, setDate] = useState(entry?.date || new Date().toISOString().slice(0,10));
+  const [accountId, setAccountId] = useState(entry?.accountId || accounts[0]?.id || "");
+  const [category, setCategory] = useState(entry?.category || DEFAULT_CATEGORIES[type][0]);
+  const [description, setDescription] = useState(entry?.description || "");
+  const [categoryTouched, setCategoryTouched] = useState(!!entry);
+
+  useEffect(() => { if (!entry && !categoryTouched) setCategory(DEFAULT_CATEGORIES[type][0]); }, [type]);
+  useEffect(() => {
+    if (entry || categoryTouched) return;
+    const guess = classify(description, customRules);
+    if (guess) { setType(guess.type); setCategory(guess.category); }
+  }, [description]);
+
+  const canSave = value !== "" && !isNaN(Number(value)) && accountId;
+  return (
+    <ModalShell title={entry ? "Editar lançamento" : "Novo lançamento"} onClose={onClose}>
+      <div className="flex flex-col gap-3">
+        <Field label="Descrição"><input value={description} onChange={(e) => setDescription(e.target.value)} style={inputStyle} placeholder="Ex.: Ifood, honorários do processo X…" autoFocus /></Field>
+        {!entry && classify(description, customRules) && !categoryTouched && <div className="text-xs flex items-center gap-1.5" style={{ color: LEDGER_GOLD }}><ISparkle size={12}/> Classificado automaticamente — ajuste se quiser.</div>}
+        <div className="flex gap-2">
+          {Object.entries(TYPE_META).map(([k,v]) => (
+            <button key={k} onClick={() => { setType(k); setCategoryTouched(true); }} className="flex-1 py-2 rounded-md text-xs font-medium" style={{ border: `1px solid ${type===k?v.color:PAPER_LINE}`, color: type===k?v.color:INK, background: type===k?`${v.color}12`:"transparent" }}>{v.label}</button>
+          ))}
+        </div>
+        <Field label="Valor (R$)"><input type="number" step="0.01" value={value} onChange={(e) => setValue(e.target.value)} style={inputStyle} placeholder="0,00" /></Field>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Data"><input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={inputStyle} /></Field>
+          <Field label="Categoria"><select value={category} onChange={(e) => { setCategory(e.target.value); setCategoryTouched(true); }} style={inputStyle}>{DEFAULT_CATEGORIES[type].map((c) => <option key={c}>{c}</option>)}</select></Field>
+        </div>
+        <Field label="Conta"><select value={accountId} onChange={(e) => setAccountId(e.target.value)} style={inputStyle}>{accounts.length===0 && <option value="">Cadastre uma conta primeiro</option>}{accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select></Field>
+        <button disabled={!canSave} onClick={() => onSave({ id: entry?.id || uid(), type, value: Number(value), date, accountId, category, description })} className="mt-2 py-2.5 rounded-md text-sm font-medium disabled:opacity-40" style={{ background: INK, color: PAPER }}>Salvar lançamento</button>
+      </div>
+    </ModalShell>
+  );
+}
+
+function AccountModal({ onClose, onSave }) {
+  const [name, setName] = useState("");
+  const [type, setType] = useState(ACCOUNT_TYPES[0]);
+  return (
+    <ModalShell title="Nova conta" onClose={onClose}>
+      <div className="flex flex-col gap-3">
+        <Field label="Nome"><input value={name} onChange={(e) => setName(e.target.value)} style={inputStyle} placeholder="Ex.: Nubank, Itaú, XP…" /></Field>
+        <Field label="Tipo"><select value={type} onChange={(e) => setType(e.target.value)} style={inputStyle}>{ACCOUNT_TYPES.map((t) => <option key={t}>{t}</option>)}</select></Field>
+        <button disabled={!name.trim()} onClick={() => onSave({ id: uid(), name: name.trim(), type })} className="mt-2 py-2.5 rounded-md text-sm font-medium disabled:opacity-40" style={{ background: INK, color: PAPER }}>Adicionar conta</button>
+      </div>
+    </ModalShell>
+  );
+}
+
+function ImportModal({ accounts, customRules, onClose, onImport }) {
+  const [accountId, setAccountId] = useState(accounts[0]?.id || "");
+  const [pasted, setPasted] = useState("");
+  const [fileRows, setFileRows] = useState([]);
+  const fileRef = useRef(null);
+
+  const handleFiles = (files) => {
+    Array.from(files).forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = () => { const rows = parseStatementText(String(reader.result || "")); setFileRows((prev) => [...prev, { fileName: file.name, rows }]); };
+      reader.readAsText(file, "utf-8");
     });
-  }
+  };
+  const pastedRows = useMemo(() => pasted.trim() ? parseStatementText(pasted) : [], [pasted]);
+  const allRaw = useMemo(() => [...fileRows.flatMap((f) => f.rows), ...pastedRows], [fileRows, pastedRows]);
+  const classified = useMemo(() => allRaw.map((r) => { const guess = classify(r.description, customRules) || { type: "despesa", category: "Outros" }; return { id: uid(), accountId, date: r.date, description: r.description, value: Math.abs(r.value), type: guess.type, category: guess.category, auto: true }; }), [allRaw, accountId, customRules]);
+  const monthsCovered = useMemo(() => [...new Set(classified.map((e) => e.date.slice(0,7)))].sort(), [classified]);
+
+  return (
+    <ModalShell title="Importar faturas" onClose={onClose} wide>
+      <div className="flex flex-col gap-3">
+        <div className="text-xs opacity-60 flex items-start gap-1.5"><IInfo size={13} className="shrink-0 mt-0.5"/> Envie de uma vez os extratos/faturas .csv de todos os meses — o app junta tudo e classifica cada gasto sozinho. Também dá para colar o texto de uma fatura copiada do app do banco.</div>
+        <Field label="Conta / cartão de destino"><select value={accountId} onChange={(e) => setAccountId(e.target.value)} style={inputStyle}>{accounts.length===0 && <option value="">Cadastre uma conta primeiro</option>}{accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select></Field>
+        <div onClick={() => fileRef.current?.click()} className="rounded-md p-6 text-center text-sm cursor-pointer" style={{ border: `1px dashed ${PAPER_LINE}`, background: CARD }}>
+          <div className="flex justify-center mb-2 opacity-60"><IFiles size={18}/></div>
+          Clique para escolher uma ou várias faturas (.csv de cada mês)
+          <input ref={fileRef} type="file" accept=".csv,text/csv,.txt" multiple className="hidden" onChange={(e) => e.target.files && handleFiles(e.target.files)} />
+        </div>
+        {fileRows.length > 0 && <div className="flex flex-wrap gap-2">{fileRows.map((f,i) => (
+          <div key={i} className="text-xs px-2 py-1 rounded-full flex items-center gap-1.5" style={{ background: `${LEDGER_GREEN}12`, color: LEDGER_GREEN }}>
+            {f.fileName} · {f.rows.length} linhas
+            <button onClick={() => setFileRows((prev) => prev.filter((_,idx) => idx!==i))} className="opacity-60 hover:opacity-100"><IX size={11}/></button>
+          </div>
+        ))}</div>}
+        <Field label="Ou cole aqui o texto da fatura (opcional)"><textarea value={pasted} onChange={(e) => setPasted(e.target.value)} rows={4} style={{ ...inputStyle, fontFamily: "monospace", fontSize: 12 }} placeholder={"12/03  IFOOD *IFOOD           45,90\n13/03  UBER *TRIP            18,50"} /></Field>
+        {classified.length > 0 ? (
+          <div className="rounded-md p-3 text-xs" style={{ background: CARD, border: `1px solid ${PAPER_LINE}` }}>
+            <div className="font-medium mb-1">{classified.length} lançamentos prontos · {monthsCovered.map(monthLabel).join(", ")}</div>
+            <div className="opacity-60">Categorias atribuídas automaticamente — revise na aba Lançamentos depois de importar.</div>
+          </div>
+        ) : (allRaw.length===0 && (fileRows.length>0 || pasted)) && <div className="text-xs" style={{ color: LEDGER_RED }}>Não consegui reconhecer linhas de lançamento neste conteúdo. Confira o formato (data, descrição, valor).</div>}
+        <button disabled={classified.length===0 || !accountId} onClick={() => onImport(classified)} className="mt-2 py-2.5 rounded-md text-sm font-medium disabled:opacity-40" style={{ background: INK, color: PAPER }}>Importar {classified.length>0 ? `(${classified.length})` : ""}</button>
+      </div>
+    </ModalShell>
+  );
 }
 
-function escapeHtml(str){
-  const d = document.createElement("div");
-  d.textContent = str;
-  return d.innerHTML;
-}
-
-function shiftMonth(delta){
-  let m = cursor.m + delta, y = cursor.y;
-  if (m < 0){ m = 11; y -= 1; }
-  if (m > 11){ m = 0; y += 1; }
-  cursor = {y,m};
-  render();
-}
-
-document.getElementById("prevMonth").addEventListener("click", () => shiftMonth(-1));
-document.getElementById("nextMonth").addEventListener("click", () => shiftMonth(1));
-
-const overlay = document.getElementById("overlay");
-const modal = document.getElementById("modal");
-const amountInput = document.getElementById("amountInput");
-const dateInput = document.getElementById("dateInput");
-const noteInput = document.getElementById("noteInput");
-const saveBtn = document.getElementById("saveBtn");
-const catGrid = document.getElementById("catGrid");
-
-function renderCatGrid(){
-  if (modalType !== "expense"){ catGrid.style.display = "none"; return; }
-  catGrid.style.display = "grid";
-  catGrid.innerHTML = CATEGORIES.map(c => `
-    <button class="catbtn ${c.id===modalCategory?"active":""}" data-id="${c.id}">
-      <div class="ci" style="background:${c.color}${c.id===modalCategory?"40":"20"};">${c.icon}</div>
-      <span>${c.label}</span>
-    </button>
-  `).join("");
-  catGrid.querySelectorAll(".catbtn").forEach(btn => {
-    btn.addEventListener("click", () => { modalCategory = btn.dataset.id; renderCatGrid(); });
-  });
-}
-
-function openModal(type){
-  modalType = type;
-  modalCategory = "alimentacao";
-  amountInput.value = "";
-  noteInput.value = "";
-  dateInput.value = todayISO();
-  document.getElementById("typeExpense").classList.toggle("active", type==="expense");
-  document.getElementById("typeIncome").classList.toggle("active", type==="income");
-  renderCatGrid();
-  overlay.classList.add("open");
-  modal.classList.add("open");
-  saveBtn.disabled = true;
-  setTimeout(() => amountInput.focus(), 80);
-}
-function closeModal(){
-  overlay.classList.remove("open");
-  modal.classList.remove("open");
-}
-
-document.getElementById("openExpense").addEventListener("click", () => openModal("expense"));
-document.getElementById("openIncome").addEventListener("click", () => openModal("income"));
-document.getElementById("closeModal").addEventListener("click", closeModal);
-overlay.addEventListener("click", closeModal);
-document.getElementById("typeExpense").addEventListener("click", () => { modalType="expense"; document.getElementById("typeExpense").classList.add("active"); document.getElementById("typeIncome").classList.remove("active"); renderCatGrid(); });
-document.getElementById("typeIncome").addEventListener("click", () => { modalType="income"; document.getElementById("typeIncome").classList.add("active"); document.getElementById("typeExpense").classList.remove("active"); renderCatGrid(); });
-
-amountInput.addEventListener("input", () => {
-  amountInput.value = amountInput.value.replace(/[^0-9.,]/g, "");
-  const val = parseFloat(amountInput.value.replace(",", "."));
-  saveBtn.disabled = !(val > 0);
-});
-
-saveBtn.addEventListener("click", () => {
-  const val = parseFloat(amountInput.value.replace(",", "."));
-  if (!(val > 0)) return;
-  transactions.unshift({
-    id: Date.now() + "-" + Math.random().toString(36).slice(2,7),
-    type: modalType,
-    amount: val,
-    category: modalType === "expense" ? modalCategory : "receita",
-    note: noteInput.value.trim(),
-    date: dateInput.value || todayISO(),
-  });
-  saveData();
-  closeModal();
-  render();
-});
-
-render();
-loadData();
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
 </script>
 </body>
 </html>
