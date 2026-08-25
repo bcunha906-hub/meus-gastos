@@ -13,6 +13,12 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+  if (window["pdfjsLib"]) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  }
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -250,6 +256,64 @@ function rowFromParts(rawDate, rawDesc, rawValue) {
   const value = Number(cleanValue);
   if (isNaN(value)) return null;
   return { date, description: (rawDesc || "").trim(), value };
+}
+
+// Extrai o texto de um PDF (fatura) usando pdf.js e devolve como texto,
+// uma linha por item de texto, aproximando o layout original.
+async function extractPdfText(file) {
+  const buffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+  let lines = [];
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    // agrupa itens por posição vertical (mesma linha visual da fatura)
+    const rows = {};
+    content.items.forEach((item) => {
+      const y = Math.round(item.transform[5]);
+      if (!rows[y]) rows[y] = [];
+      rows[y].push(item.str);
+    });
+    const ys = Object.keys(rows).map(Number).sort((a, b) => b - a);
+    ys.forEach((y) => lines.push(rows[y].join(" ")));
+  }
+  return lines.join("\n");
+}
+
+// ---------- Campo de valor em Real (formata como R$ 1.000,00 ao digitar) ----------
+function CurrencyInput({ value, onChange, style, placeholder }) {
+  // value: número (ex.: 1000.5). Exibe formatado; digita só dígitos, últimos 2 = centavos.
+  const [digits, setDigits] = useState(value ? String(Math.round(value * 100)) : "");
+
+  useEffect(() => {
+    const num = value ? Math.round(value * 100) : 0;
+    if (String(num) !== digits) setDigits(value ? String(Math.round(value * 100)) : "");
+  }, [value]);
+
+  const display = () => {
+    if (!digits) return "";
+    const n = Number(digits) / 100;
+    return n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
+  const handleChange = (e) => {
+    const raw = e.target.value.replace(/\D/g, "").replace(/^0+(?=\d)/, "");
+    setDigits(raw);
+    onChange(raw ? Number(raw) / 100 : "");
+  };
+
+  return (
+    <div className="relative">
+      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm opacity-60">R$</span>
+      <input
+        inputMode="numeric"
+        value={display()}
+        onChange={handleChange}
+        style={{ ...style, paddingLeft: 34 }}
+        placeholder={placeholder || "0,00"}
+      />
+    </div>
+  );
 }
 
 function useStore() {
@@ -796,7 +860,7 @@ function EntryModal({ accounts, entry, customRules, onClose, onSave }) {
             <button key={k} onClick={() => { setType(k); setCategoryTouched(true); }} className="flex-1 py-2 rounded-md text-xs font-medium" style={{ border: `1px solid ${type===k?v.color:PAPER_LINE}`, color: type===k?v.color:INK, background: type===k?`${v.color}12`:"transparent" }}>{v.label}</button>
           ))}
         </div>
-        <Field label="Valor (R$)"><input type="number" step="0.01" value={value} onChange={(e) => setValue(e.target.value)} style={inputStyle} placeholder="0,00" /></Field>
+        <Field label="Valor (R$)"><CurrencyInput value={value === "" ? "" : Number(value)} onChange={(v) => setValue(v === "" ? "" : v)} style={inputStyle} /></Field>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Data"><input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={inputStyle} /></Field>
           <Field label="Categoria"><select value={category} onChange={(e) => { setCategory(e.target.value); setCategoryTouched(true); }} style={inputStyle}>{DEFAULT_CATEGORIES[type].map((c) => <option key={c}>{c}</option>)}</select></Field>
@@ -829,7 +893,18 @@ function ImportModal({ accounts, customRules, onClose, onImport }) {
   const fileRef = useRef(null);
 
   const handleFiles = (files) => {
-    Array.from(files).forEach((file) => {
+    Array.from(files).forEach(async (file) => {
+      const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name);
+      if (isPdf) {
+        try {
+          const text = await extractPdfText(file);
+          const rows = parseStatementText(text);
+          setFileRows((prev) => [...prev, { fileName: file.name, rows }]);
+        } catch (e) {
+          setFileRows((prev) => [...prev, { fileName: file.name + " (falhou ao ler o PDF)", rows: [] }]);
+        }
+        return;
+      }
       const reader = new FileReader();
       reader.onload = () => { const rows = parseStatementText(String(reader.result || "")); setFileRows((prev) => [...prev, { fileName: file.name, rows }]); };
       reader.readAsText(file, "utf-8");
@@ -843,12 +918,12 @@ function ImportModal({ accounts, customRules, onClose, onImport }) {
   return (
     <ModalShell title="Importar faturas" onClose={onClose} wide>
       <div className="flex flex-col gap-3">
-        <div className="text-xs opacity-60 flex items-start gap-1.5"><IInfo size={13} className="shrink-0 mt-0.5"/> Envie de uma vez os extratos/faturas .csv de todos os meses — o app junta tudo e classifica cada gasto sozinho. Também dá para colar o texto de uma fatura copiada do app do banco.</div>
+        <div className="text-xs opacity-60 flex items-start gap-1.5"><IInfo size={13} className="shrink-0 mt-0.5"/> Envie de uma vez as faturas em PDF (ou .csv) de todos os meses — o app lê o texto do PDF automaticamente, junta tudo e classifica cada gasto sozinho. Também dá para colar o texto de uma fatura copiada do app do banco.</div>
         <Field label="Conta / cartão de destino"><select value={accountId} onChange={(e) => setAccountId(e.target.value)} style={inputStyle}>{accounts.length===0 && <option value="">Cadastre uma conta primeiro</option>}{accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select></Field>
         <div onClick={() => fileRef.current?.click()} className="rounded-md p-6 text-center text-sm cursor-pointer" style={{ border: `1px dashed ${PAPER_LINE}`, background: CARD }}>
           <div className="flex justify-center mb-2 opacity-60"><IFiles size={18}/></div>
-          Clique para escolher uma ou várias faturas (.csv de cada mês)
-          <input ref={fileRef} type="file" accept=".csv,text/csv,.txt" multiple className="hidden" onChange={(e) => e.target.files && handleFiles(e.target.files)} />
+          Clique para escolher uma ou várias faturas (.pdf ou .csv de cada mês)
+          <input ref={fileRef} type="file" accept=".csv,text/csv,.txt,.pdf,application/pdf" multiple className="hidden" onChange={(e) => e.target.files && handleFiles(e.target.files)} />
         </div>
         {fileRows.length > 0 && <div className="flex flex-wrap gap-2">{fileRows.map((f,i) => (
           <div key={i} className="text-xs px-2 py-1 rounded-full flex items-center gap-1.5" style={{ background: `${LEDGER_GREEN}12`, color: LEDGER_GREEN }}>
